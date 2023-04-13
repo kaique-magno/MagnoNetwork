@@ -10,4 +10,5 @@ A simple module to make it simple the network layer of Swift Apps.
 
 ## TODO
 
-- [] Test covergare at 100% 
+- [ ] Test covergare at 100% 
+- [ ] Control URLSessionTasks by Endpoint reference
