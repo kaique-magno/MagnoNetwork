@@ -20,14 +20,12 @@ let package = Package(
         // Targets can depend on other targets in this package, and on products in packages this package depends on.
         .target(
             name: "MagnoNetwork",
-            path: "MagnoNetwork/",
-            exclude: ["MagnoNetworkSample/"]
+            path: "MagnoNetwork/"
         ),
         .testTarget(
             name: "MagnoNetworkTests",
             dependencies: ["MagnoNetwork"],
-            path: "MagnoNetworkTests/",
-            exclude: ["MagnoNetworkSample/"]
+            path: "MagnoNetworkTests/"
         ),
     ]
 )
