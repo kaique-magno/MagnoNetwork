@@ -1,10 +1,10 @@
 import Foundation
 
-protocol ServiceInterface {
+public protocol ServiceInterface {
     func request<EndpointType: Endpoint>(endpoint: EndpointType) async -> Result<EndpointType.Response, Error>
 }
 
-class Service {
+public class Service {
     private var task: URLSessionTask?
     
     private let requestPerformer: RequestPerformer
