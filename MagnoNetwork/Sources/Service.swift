@@ -1,6 +1,10 @@
 import Foundation
 
-public class Service {
+protocol ServiceInterface {
+    func request<EndpointType: Endpoint>(endpoint: EndpointType) async -> Result<EndpointType.Response, Error>
+}
+
+class Service {
     private var task: URLSessionTask?
     
     private let requestPerformer: RequestPerformer
@@ -11,7 +15,7 @@ public class Service {
 }
 
 private extension Service {
-    func handle<T: Decodable>(data: Data?) -> T? {
+    func handle<T: Decodable>(data: Data?) throws -> T? {
         guard let data = data else { return nil }
         let decoder = JSONDecoder()
         var decodedObject: T?
@@ -19,37 +23,50 @@ private extension Service {
             decodedObject = try decoder.decode(T.self, from: data)
         } catch {
             debugPrint(error)
+            throw error
         }
         return decodedObject
     }
 }
 
-extension Service: EndpointRequesterProtocol {
-    public func request<S: Endpoint>(endpoint: S, completion: @escaping EndpointResponseCompletion<S.Response>) {
+extension Service: ServiceInterface {
+    public func request<EndpointType: Endpoint>(endpoint: EndpointType) async -> Result<EndpointType.Response, Error> {
         let requestFactory = RequestFactory(endpoint: endpoint)
         var request: URLRequest
         
         do {
             request = try requestFactory.generateURLRequest()
         } catch {
-            completion(.failure(error))
-            return
+            return .failure(error)
         }
         
+        var fetchResult: Result<EndpointType.Response, Error>?
         let task = requestPerformer.perform(request: request) { [weak self] data, response, error in
             guard let self = self else { return }
             if let response = response {
                 debugPrint(response)
             }
+            
             if let error = error {
-                completion(.failure(error))
+                fetchResult = .failure(error)
             }
-            if let object: S.Response = self.handle(data: data) {
-                completion(.success(object))
+            do {
+                guard let object: EndpointType.Response = try self.handle(data: data) else {
+                    return
+                }
+                fetchResult = .success(object)
+            } catch {
+                fetchResult = .failure(error)
             }
         }
         
         task.resume()
+        
+        guard let fetchResult = fetchResult else {
+            return .failure(Errors.nilResponse)
+        }
+        
+        return fetchResult
     }
     
     public func cancel() {

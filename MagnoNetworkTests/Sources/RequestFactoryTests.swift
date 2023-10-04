@@ -15,6 +15,8 @@ struct GenericBaseEndpoint: BaseEndpoint {
 }
 
 struct GenericEndpoint: Endpoint {
+    typealias Response = String
+    
     var path: String
     var baseEndpoint: BaseEndpoint? = nil
     var httpMethod: HTTPMethod
@@ -38,7 +40,7 @@ final class RequestFactoryTests: XCTestCase {
     }
     
     func test_urlPath_Error() throws {
-        let pathURL = "not an url"
+        let pathURL = ""
         let endpoint = GenericEndpoint(path: pathURL,
                                        baseEndpoint: nil,
                                        httpMethod: .get,
