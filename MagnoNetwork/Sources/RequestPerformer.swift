@@ -1,10 +1,8 @@
 import Foundation
 
 public protocol RequestPerformer {
-    func perform(request: URLRequest, completion: @escaping RequestPerformerCompletion) -> URLSessionDataTask
+    func perform(request: URLRequest) async throws -> (Data, URLResponse)
 }
-
-public typealias RequestPerformerCompletion = (_ data: Data?, _ response: URLResponse?, _ error: Error?) -> Void
 
 public struct URLSessionRequestPerformer {
     let session: URLSession
@@ -15,9 +13,8 @@ public struct URLSessionRequestPerformer {
 }
 
 extension URLSessionRequestPerformer: RequestPerformer {
-    public func perform(request: URLRequest, completion: @escaping RequestPerformerCompletion) -> URLSessionDataTask {
-        let task = session.dataTask(with: request, completionHandler: completion)
-        task.resume()
-        return task
+    public func perform(request: URLRequest) async throws -> (Data, URLResponse) {
+        let taskResult = try await session.data(for: request)
+        return taskResult
     }
 }

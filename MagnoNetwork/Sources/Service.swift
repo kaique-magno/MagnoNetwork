@@ -36,37 +36,18 @@ extension Service: ServiceInterface {
         
         do {
             request = try requestFactory.generateURLRequest()
+            let (data, response) = try await requestPerformer.perform(request: request)
+            debugPrint(response)
+            
+            guard let object: EndpointType.Response = try self.handle(data: data) else {
+                return .failure(MagnoNetworkErrors.emptyResult)
+            }
+        
+            return .success(object)
+            
         } catch {
             return .failure(error)
         }
-        
-        var fetchResult: Result<EndpointType.Response, Error>?
-        let task = requestPerformer.perform(request: request) { [weak self] data, response, error in
-            guard let self = self else { return }
-            if let response = response {
-                debugPrint(response)
-            }
-            
-            if let error = error {
-                fetchResult = .failure(error)
-            }
-            do {
-                guard let object: EndpointType.Response = try self.handle(data: data) else {
-                    return
-                }
-                fetchResult = .success(object)
-            } catch {
-                fetchResult = .failure(error)
-            }
-        }
-        
-        task.resume()
-        
-        guard let fetchResult = fetchResult else {
-            return .failure(Errors.nilResponse)
-        }
-        
-        return fetchResult
     }
     
     public func cancel() {

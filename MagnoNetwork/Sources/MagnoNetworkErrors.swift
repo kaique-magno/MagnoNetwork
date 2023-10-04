@@ -1,9 +1,9 @@
 import Foundation
 
-enum Errors: Error {
+public enum MagnoNetworkErrors: Error {
     case invalidResponse
     case invalidData
     case failedRequest(Int)
     case nilURL
-    case nilResponse
+    case emptyResult
 }
