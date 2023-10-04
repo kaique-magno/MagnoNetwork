@@ -5,4 +5,5 @@ enum Errors: Error {
     case invalidData
     case failedRequest(Int)
     case nilURL
+    case nilResponse
 }

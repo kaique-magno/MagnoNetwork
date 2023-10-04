@@ -19,7 +19,7 @@ public extension BaseEndpoint {
 
 /// A protocol to set the main properties of an Endpoint 
 public protocol Endpoint {
-    associatedtype Response = Decodable
+    associatedtype Response: Decodable
     var path: String { get }
     var baseEndpoint: BaseEndpoint? { get }
     var httpMethod: HTTPMethod { get }
