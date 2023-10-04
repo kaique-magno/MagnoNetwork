@@ -25,7 +25,7 @@ public struct RequestFactory {
         let urlPath = urlPath(from: endpoint)
         
         guard var url = URL(string: urlPath) else {
-            throw Errors.nilURL
+            throw MagnoNetworkErrors.nilURL
         }
         
         if let parameters = endpoint.parameters {
