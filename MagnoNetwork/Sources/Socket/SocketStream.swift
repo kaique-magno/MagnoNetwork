@@ -1,5 +1,3 @@
-//This code was inspirided by this Article https://www.donnywals.com/iterating-over-web-socket-messages-with-async-await-in-swift/
-
 import Foundation
 
 //MARK: - SocketStream
@@ -16,7 +14,7 @@ import Foundation
 let url = URL(string: "wss://your-socket-address")!
 let session = URLSession.shared
 let webSocketTask = session.webSocketTask(with: url)
-let socketStram = SocketStram(task: webSocketTask)
+let socketStream = SocketStream(task: webSocketTask)
  
 for await messageSocket in socketStream {
      switch message {
