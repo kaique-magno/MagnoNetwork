@@ -4,11 +4,17 @@
 
 Magno Network is a powerful Swift module that simplifies the network layer for your iOS and macOS apps. This framework is designed to make working with URLSession and handling network requests a breeze, allowing you to focus on building amazing features for your app.
 
+###New in Version 3.0.0: WebSocket Support!
+
+Now, Magno Network also offers WebSocket support, making it even more versatile for real-time communication in your applications.
+
 ## Features
 
 - **Simplified Networking**: Magno Network provides a clean and intuitive API for making network requests, reducing boilerplate code and making your codebase more maintainable.
 
 - **Endpoint-based Request Handling**: With Magno Network, you can control URLSessionTasks using Endpoint references, making it easy to manage and cancel specific network requests.
+
+- **WebSocket Integration**: Easily incorporate WebSocket communication into your app with the new WebSocket module. Connect, send, and receive real-time data effortlessly.
 
 - **Powered by Tuist**: Magno Network is proudly powered by [Tuist](https://tuist.io), ensuring a consistent and maintainable project structure for your Swift apps.
 
