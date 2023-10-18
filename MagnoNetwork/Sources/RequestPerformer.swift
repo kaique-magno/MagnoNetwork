@@ -23,7 +23,7 @@ extension URLSessionRequestPerformer: RequestPerformer {
         let socketStream = SocketStream(task: task)
        
         let socketMap: AsyncThrowingMapSequence<SocketStream, T> = socketStream.map { message in
-            let object: T = try SocketMessageConverter.object(from: message)
+            let object: T = try SocketMessageConverter.object(from: message, objectType: T.self)
             return object
         }
         

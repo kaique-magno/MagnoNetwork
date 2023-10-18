@@ -5,7 +5,7 @@ enum SocketMessageConverter {
         case messageGotOnDefaultCase
     }
     
-    static func object<T: Decodable>(from socketMessage: URLSessionWebSocketTask.Message) throws -> T {
+    static func object<T: Decodable>(from socketMessage: URLSessionWebSocketTask.Message, objectType: T.Type) throws -> T {
         return try handle(socketMessage)
     }
 }
