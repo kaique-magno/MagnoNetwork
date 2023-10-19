@@ -46,6 +46,7 @@ public class SocketStream {
     
     deinit {
         streamContinuation?.finish()
+        debugPrint("☠️ SocketStream: \(self)")
     }
 }
 

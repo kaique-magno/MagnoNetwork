@@ -4,7 +4,7 @@ import Foundation
 
 public protocol ServiceInterface {
     func request<EndpointType: Endpoint>(endpoint: EndpointType) async -> Result<EndpointType.Response, Error>
-    func requestSocket<EndpointType: Endpoint>(endpoint: EndpointType) async throws -> AsyncThrowingMapSequence<SocketStream, EndpointType.Response>
+    func requestSocket<EndpointType: Endpoint>(endpoint: EndpointType) async throws -> AsyncSocketWrapper<EndpointType.Response>
 }
 
 public class Service {
@@ -70,11 +70,10 @@ extension Service: ServiceInterface {
         }
     }
     
-    public func requestSocket<EndpointType: Endpoint>(endpoint: EndpointType) async throws -> AsyncThrowingMapSequence<SocketStream, EndpointType.Response> {
+    public func requestSocket<EndpointType: Endpoint>(endpoint: EndpointType) async throws -> AsyncSocketWrapper<EndpointType.Response> {
         let socketRequest = try RequestFactory.generateSocketTask(fromEndpoint: endpoint, session: session)
         
-        let result: AsyncThrowingMapSequence<SocketStream, EndpointType.Response> = try await requestPerformer.performSocket(task: socketRequest,
-                                                                                                                             withResultType: EndpointType.Response.self)
+        let result = try await requestPerformer.performSocket(task: socketRequest, withResultType: EndpointType.Response.self)
         return result
     }
     
