@@ -33,8 +33,7 @@ final class RequestFactoryTests: XCTestCase {
                                        httpMethod: .get,
                                        parameters: [:],
                                        headers: [:])
-        let sut = RequestFactory(endpoint: endpoint)
-        let request = try sut.generateURLRequest()
+        let request = try RequestFactory.generateURLRequest(fromEndpoint: endpoint)
         let urlString = try XCTUnwrap(request.url?.formatted())
         XCTAssertEqual(urlString, pathURL)
     }
@@ -46,8 +45,7 @@ final class RequestFactoryTests: XCTestCase {
                                        httpMethod: .get,
                                        parameters: [:],
                                        headers: [:])
-        let sut = RequestFactory(endpoint: endpoint)
-        XCTAssertThrowsError(try sut.generateURLRequest())
+        XCTAssertThrowsError(try RequestFactory.generateURLRequest(fromEndpoint: endpoint))
     }
     
     func test_urlMethod_Matches() throws {
@@ -57,8 +55,7 @@ final class RequestFactoryTests: XCTestCase {
                                        httpMethod: .post,
                                        parameters: [:],
                                        headers: [:])
-        let sut = RequestFactory(endpoint: endpoint)
-        let request = try sut.generateURLRequest()
+        let request = try RequestFactory.generateURLRequest(fromEndpoint: endpoint)
         let httpMethod = try XCTUnwrap(request.httpMethod)
         XCTAssertEqual(httpMethod, endpoint.httpMethod.rawValue)
     }
@@ -75,8 +72,7 @@ final class RequestFactoryTests: XCTestCase {
                                        httpMethod: .post,
                                        parameters: parameters,
                                        headers: [:])
-        let sut = RequestFactory(endpoint: endpoint)
-        let request = try sut.generateURLRequest()
+        let request = try RequestFactory.generateURLRequest(fromEndpoint: endpoint)
         let url: URL = try XCTUnwrap(request.url)
         let urlParameters = try XCTUnwrap(url.query())
         let parametersArray = parameters.map { "\($0)=\($1)" }
@@ -97,8 +93,7 @@ final class RequestFactoryTests: XCTestCase {
                                        httpMethod: .post,
                                        parameters: [:],
                                        headers: headers)
-        let sut = RequestFactory(endpoint: endpoint)
-        let request = try sut.generateURLRequest()
+        let request = try RequestFactory.generateURLRequest(fromEndpoint: endpoint)
         let requestHeaders = try XCTUnwrap(request.allHTTPHeaderFields)
         XCTAssertEqual(requestHeaders, headers)
     }
@@ -123,8 +118,7 @@ final class RequestFactoryTests: XCTestCase {
                                        httpMethod: .post,
                                        parameters: [:],
                                        headers: headers)
-        let sut = RequestFactory(endpoint: endpoint)
-        let request = try sut.generateURLRequest()
+        let request = try RequestFactory.generateURLRequest(fromEndpoint: endpoint)
         
         let urlPaths = basePathURL + pathURL
         let urlString = try XCTUnwrap(request.url?.formatted())

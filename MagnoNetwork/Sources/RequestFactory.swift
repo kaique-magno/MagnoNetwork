@@ -1,67 +1,48 @@
 import Foundation
 
-public struct RequestFactory {
-    private let endpoint: any Endpoint
-    
-    public init(endpoint: any Endpoint) {
-        self.endpoint = endpoint
-    }
-    
-    public func generateURLRequest(cachePolicy: URLRequest.CachePolicy = .reloadIgnoringLocalAndRemoteCacheData,
-                            timeoutInterval: TimeInterval = 5.0) throws -> URLRequest {
+enum RequestFactory { }
+
+//MARK: - REST
+extension RequestFactory {
+    static func generateURLRequest(fromEndpoint endpoint: any Endpoint,
+                                   cachePolicy: URLRequest.CachePolicy = .reloadIgnoringLocalAndRemoteCacheData,
+                                   timeoutInterval: TimeInterval = 5.0) throws -> URLRequest {
         // Generate URL
-        let url = try url(from: endpoint)
+        guard let url = endpoint.url else {
+            throw MagnoNetworkErrors.nilURL
+        }
         
         // Generate Request
         var request = URLRequest(url: url,
                                  cachePolicy: cachePolicy,
                                  timeoutInterval: timeoutInterval)
         request.httpMethod = endpoint.httpMethod.rawValue
-        request = addHeaders(in: request)
+        request = addHeaders(from: endpoint, in: request)
         return request
     }
-    
-    private func url(from endpoint: any Endpoint) throws -> URL {
-        let urlPath = urlPath(from: endpoint)
-        
-        guard var url = URL(string: urlPath) else {
+}
+
+//MARK: - Socket
+extension RequestFactory {
+    static func generateSocketTask(fromEndpoint endpoint: any Endpoint,
+                                   session: URLSession,
+                                   protocols: [String] = []) throws -> URLSessionWebSocketTask {
+        // Generate URL
+        guard let url = endpoint.url else {
             throw MagnoNetworkErrors.nilURL
         }
         
-        if let parameters = endpoint.parameters {
-            url = add(parameters: parameters, in: url)
-        }
-        
-        return url
+        // Generate Request
+        let socketTask = session.webSocketTask(with: url, protocols: protocols)
+        return socketTask
     }
+}
+
+//MARK: - Private function
+private extension RequestFactory {
     
-    private func urlPath(from endpoint: any Endpoint) -> String {
-        var urlPath = String()
-        
-        if let baseEndpoint = endpoint.baseEndpoint {
-            urlPath = baseEndpoint.basePath
-        }
-        
-        urlPath = "\(urlPath)\(endpoint.path)"
-        
-        return urlPath
-    }
-    
-    private func add(parameters: Parameters, in url: URL) -> URL {
-        var multableURL = url
-        
-        let queryItems = parameters.map(queryItem(from:))
-        multableURL.append(queryItems: queryItems)
-        
-        return multableURL
-    }
-    
-    private func queryItem(from parameter: (key: String, value: Any)) -> URLQueryItem {
-        URLQueryItem(name: parameter.key,
-                     value: "\(parameter.value)")
-    }
-    
-    private func addHeaders(in request: URLRequest) -> URLRequest {
+    //MARK: Modifying Requests
+    static func addHeaders(from endpoint: any Endpoint, in request: URLRequest) -> URLRequest {
         var changebleRequest = request
         if let baseEndpoint = endpoint.baseEndpoint,
            let baseHeaders = baseEndpoint.headers {
@@ -75,7 +56,7 @@ public struct RequestFactory {
         return changebleRequest
     }
     
-    private func add(headers: HTTPHeaders, in request: URLRequest) -> URLRequest {
+    static func add(headers: HTTPHeaders, in request: URLRequest) -> URLRequest {
         var multableRequest = request
         for (headerKey, headerValue) in headers {
             multableRequest.setValue(headerValue, forHTTPHeaderField: headerKey)

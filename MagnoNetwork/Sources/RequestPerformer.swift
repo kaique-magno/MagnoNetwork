@@ -1,7 +1,7 @@
 import Foundation
 
 public protocol RequestPerformer {
-    func perform(request: URLRequest) async throws -> (Data, URLResponse)
+    func perform(request: URLRequest, completion: @escaping (Data?, URLResponse?, Error?) -> ()) -> URLSessionDataTask
     func performSocket<T: Decodable>(task: URLSessionWebSocketTask, withResultType: T.Type) async throws -> AsyncThrowingMapSequence<SocketStream, T>
 }
 
@@ -14,9 +14,8 @@ public struct URLSessionRequestPerformer {
 }
 
 extension URLSessionRequestPerformer: RequestPerformer {
-    public func perform(request: URLRequest) async throws -> (Data, URLResponse) {
-        let taskResult = try await session.data(for: request)
-        return taskResult
+    public func perform(request: URLRequest, completion: @escaping (Data?, URLResponse?, Error?) -> ()) -> URLSessionDataTask {
+        return session.dataTask(with: request, completionHandler: completion)
     }
     
     public func performSocket<T: Decodable>(task: URLSessionWebSocketTask, withResultType: T.Type) async throws -> AsyncThrowingMapSequence<SocketStream, T> {

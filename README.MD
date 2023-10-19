@@ -32,6 +32,7 @@ Then, add `"MagnoNetwork"` as a dependency to your target.
 
 ## Usage
 
+### Endpoint
 ```swift
 // Create an instance of MagnoNetwork
 let service: ServiceInterface = Service()
@@ -57,6 +58,24 @@ service.request(endpoint) { result in
         // Handle the error
         print(error)
     }
+}
+```
+### Socket
+```swift
+let url = URL(string: "wss://your-socket-address")!
+let session = URLSession.shared
+let webSocketTask = session.webSocketTask(with: url)
+let socketStream = SocketStream(task: webSocketTask)
+ 
+for await messageSocket in socketStream {
+     switch message {
+     case .data(let data):
+         debugPrint(String(data: data, encoding: .utf8))
+     case .string(let string):
+         debugPrint(string)
+     @unknown default:
+         debugPrint("In Default")
+     }
 }
 ```
 

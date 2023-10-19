@@ -1,21 +1,31 @@
+//TODO: Testar public func request<EndpointType: Endpoint>(endpoint: EndpointType) async -> Result<EndpointType.Response, Error> verifciar se o async está funcionando agora que o session ta usando o completionHandler
+
 import Foundation
 
 public protocol ServiceInterface {
     func request<EndpointType: Endpoint>(endpoint: EndpointType) async -> Result<EndpointType.Response, Error>
+    func requestSocker<EndpointType: Endpoint>(endpoint: EndpointType) async throws -> AsyncThrowingMapSequence<SocketStream, EndpointType.Response>
 }
 
 public class Service {
-    private var task: URLSessionTask?
+    private var tasks: [URL: URLSessionDataTask] = [:]
+    private var socketTasks: [URL: URLSessionWebSocketTask] = [:]
     
     private let requestPerformer: RequestPerformer
+    private let session: URLSession
     
-    public init(requestPerformer: RequestPerformer = URLSessionRequestPerformer()) {
-        self.requestPerformer = requestPerformer
+    public init(session: URLSession = .shared, requestPerformer: RequestPerformer? = nil) {
+        self.session = session
+        if let requestPerformer {
+            self.requestPerformer = requestPerformer
+        } else {
+            self.requestPerformer = URLSessionRequestPerformer(session: session)
+        }
     }
 }
 
 private extension Service {
-    func handle<T: Decodable>(data: Data?) throws -> T? {
+    func handle<T: Decodable>(data: Data?) -> T? {
         guard let data = data else { return nil }
         let decoder = JSONDecoder()
         var decodedObject: T?
@@ -23,7 +33,6 @@ private extension Service {
             decodedObject = try decoder.decode(T.self, from: data)
         } catch {
             debugPrint(error)
-            throw error
         }
         return decodedObject
     }
@@ -31,28 +40,66 @@ private extension Service {
 
 extension Service: ServiceInterface {
     public func request<EndpointType: Endpoint>(endpoint: EndpointType) async -> Result<EndpointType.Response, Error> {
-        let requestFactory = RequestFactory(endpoint: endpoint)
-        var request: URLRequest
-        
         do {
-            request = try requestFactory.generateURLRequest()
-            let (data, response) = try await requestPerformer.perform(request: request)
-            debugPrint(response)
-            
-            guard let object: EndpointType.Response = try self.handle(data: data) else {
-                return .failure(MagnoNetworkErrors.emptyResult)
+            var responseError: Error?
+            var object: EndpointType.Response?
+            let request: URLRequest = try RequestFactory.generateURLRequest(fromEndpoint: endpoint)
+            let task = requestPerformer.perform(request: request) { [weak self] (data, response, error) in
+                debugPrint(response ?? "Response null")
+                responseError = error
+                object = self?.handle(data: data)
             }
-        
-            return .success(object)
+            
+            add(task, of: endpoint)
+            
+            if let responseError {
+                return .failure(responseError)
+            }
+            
+            if let object  {
+                return .success(object)
+            }
+            
+            return .failure(MagnoNetworkErrors.emptyResult)
             
         } catch {
             return .failure(error)
         }
     }
     
-    public func cancel() {
-        task?.cancel()
+    public func requestSocker<EndpointType: Endpoint>(endpoint: EndpointType) async throws -> AsyncThrowingMapSequence<SocketStream, EndpointType.Response> {
+        let socketRequest = try RequestFactory.generateSocketTask(fromEndpoint: endpoint, session: session)
+        
+        let result: AsyncThrowingMapSequence<SocketStream, EndpointType.Response> = try await requestPerformer.performSocket(task: socketRequest,
+                                                                                                                             withResultType: EndpointType.Response.self)
+        return result
+    }
+    
+    public func cancel(endpoint: some Endpoint) {
+        guard let url = endpoint.url else {
+            return
+        }
+        
+        if let task = tasks[url] {
+            task.cancel()
+        } else if let socketTask = socketTasks[url] {
+            socketTask.cancel()
+        }
     }
 }
 
-
+private extension Service {
+    func add(_ task: URLSessionWebSocketTask, of endpoint: any Endpoint) {
+        guard let url = endpoint.url else {
+            return
+        }
+        socketTasks[url] = task
+    }
+    
+    func add(_ task: URLSessionDataTask, of endpoint: any Endpoint) {
+        guard let url = endpoint.url else {
+            return
+        }
+        tasks[url] = task
+    }
+}

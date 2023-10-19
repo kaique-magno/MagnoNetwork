@@ -35,3 +35,46 @@ public extension Endpoint {
     var headers: HTTPHeaders? { nil }
     var body: Encodable? { nil }
 }
+
+extension Endpoint {
+    //MARK: Modifying URLs
+    var url: URL? {
+        let urlPath = urlPath(from: self)
+        
+        guard var url = URL(string: urlPath) else {
+            return nil
+        }
+        
+        if let parameters = parameters {
+            url = add(parameters: parameters, in: url)
+        }
+        
+        return url
+    }
+    
+    func urlPath(from endpoint: any Endpoint) -> String {
+        var urlPath = String()
+        
+        if let baseEndpoint = endpoint.baseEndpoint {
+            urlPath = baseEndpoint.basePath
+        }
+        
+        urlPath = "\(urlPath)\(endpoint.path)"
+        
+        return urlPath
+    }
+    
+    func add(parameters: Parameters, in url: URL) -> URL {
+        var multableURL = url
+        
+        let queryItems = parameters.map(queryItem(from:))
+        multableURL.append(queryItems: queryItems)
+        
+        return multableURL
+    }
+    
+    func queryItem(from parameter: (key: String, value: Any)) -> URLQueryItem {
+        URLQueryItem(name: parameter.key,
+                     value: "\(parameter.value)")
+    }
+}
