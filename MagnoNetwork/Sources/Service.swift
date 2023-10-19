@@ -40,43 +40,33 @@ private extension Service {
 
 extension Service: ServiceInterface {
     public func request<EndpointType: Endpoint>(endpoint: EndpointType) async -> Result<EndpointType.Response, Error> {
-        do {
-            var responseError: Error?
-            var object: EndpointType.Response?
-            let request: URLRequest = try RequestFactory.generateURLRequest(fromEndpoint: endpoint)
+        await withCheckedContinuation { continuation in
+            let request: URLRequest
+            
+            do {
+                request = try RequestFactory.generateURLRequest(fromEndpoint: endpoint)
+            } catch {
+                continuation.resume(returning: .failure(error))
+                return
+            }
+            
             let task = requestPerformer.perform(request: request) { [weak self] (data, response, error) in
                 debugPrint(response ?? "Response null")
-                responseError = error
-                object = self?.handle(data: data)
-            }
-            
-            add(task, of: endpoint)
-            
-            task.resume()
-            
-            if let responseError {
-                debugPrint(responseError)
-                return await withCheckedContinuation { continuation in
-                    continuation.resume(returning: .failure(responseError))
+                let object: EndpointType.Response? = self?.handle(data: data)
+                
+                if let error {
+                    debugPrint(error)
+                    continuation.resume(returning: .failure(error))
                 }
-            }
-            
-            if let object  {
-                debugPrint(object)
-                return await withCheckedContinuation { continuation in
+                
+                if let object  {
+                    debugPrint(object)
                     continuation.resume(returning: .success(object))
                 }
             }
             
-            return await withCheckedContinuation { continuation in
-                continuation.resume(returning: .failure(MagnoNetworkErrors.emptyResult))
-            }
-            
-        } catch {
-            debugPrint(error)
-            return await withCheckedContinuation { continuation in
-                continuation.resume(returning: .failure(error))
-            }
+            add(task, of: endpoint)
+            task.resume()
         }
     }
     
