@@ -55,17 +55,28 @@ extension Service: ServiceInterface {
             task.resume()
             
             if let responseError {
-                return .failure(responseError)
+                debugPrint(responseError)
+                return await withCheckedContinuation { continuation in
+                    continuation.resume(returning: .failure(responseError))
+                }
             }
             
             if let object  {
-                return .success(object)
+                debugPrint(object)
+                return await withCheckedContinuation { continuation in
+                    continuation.resume(returning: .success(object))
+                }
             }
             
-            return .failure(MagnoNetworkErrors.emptyResult)
+            return await withCheckedContinuation { continuation in
+                continuation.resume(returning: .failure(MagnoNetworkErrors.emptyResult))
+            }
             
         } catch {
-            return .failure(error)
+            debugPrint(error)
+            return await withCheckedContinuation { continuation in
+                continuation.resume(returning: .failure(error))
+            }
         }
     }
     
