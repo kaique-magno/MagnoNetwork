@@ -5,6 +5,7 @@ import Foundation
 public protocol ServiceInterface {
     func request<EndpointType: Endpoint>(endpoint: EndpointType) async -> Result<EndpointType.Response, Error>
     func requestSocket<EndpointType: Endpoint>(endpoint: EndpointType) async throws -> AsyncSocketWrapper<EndpointType.Response>
+    func cancel(endpoint: some Endpoint)
 }
 
 public class Service {
@@ -72,6 +73,7 @@ extension Service: ServiceInterface {
     
     public func requestSocket<EndpointType: Endpoint>(endpoint: EndpointType) async throws -> AsyncSocketWrapper<EndpointType.Response> {
         let socketRequest = try RequestFactory.generateSocketTask(fromEndpoint: endpoint, session: session)
+        add(socketRequest, of: endpoint)
         
         let result = try await requestPerformer.performSocket(task: socketRequest, withResultType: EndpointType.Response.self)
         return result
@@ -84,8 +86,11 @@ extension Service: ServiceInterface {
         
         if let task = tasks[url] {
             task.cancel()
+            tasks.removeValue(forKey: url)
+            
         } else if let socketTask = socketTasks[url] {
             socketTask.cancel()
+            socketTasks.removeValue(forKey: url)
         }
     }
 }
