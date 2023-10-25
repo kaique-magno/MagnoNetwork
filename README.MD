@@ -56,7 +56,7 @@ service.request(endpoint) { result in
 
 ## Contributions and Feedback
 
-Magno Network is a work in progress, and we welcome contributions, suggestions, and feedback from the community. If you have ideas for improvement or encounter any issues, please [open an issue](https://github.com/your-username/MagnoNetwork/issues) or submit a pull request.
+Magno Network is a work in progress, and we welcome contributions, suggestions, and feedback from the community. If you have ideas for improvement or encounter any issues, please [open an issue](https://github.com/kaique-magno/MagnoNetwork/issues) or submit a pull request.
 
 ## License
 
